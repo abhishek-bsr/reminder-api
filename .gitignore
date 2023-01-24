@@ -2,5 +2,6 @@
 /target
 
 # misc
+.DS_STORE
 /.idea
 /lib
