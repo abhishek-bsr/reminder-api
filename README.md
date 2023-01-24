@@ -10,7 +10,7 @@ HTTP GET /api/v1/reminders
 # get data from query
 # limit<int>   = restrict number of rows from query
 # offset<int>  = skip number of rows from query
-HTTP GET /api/v1/reminders?limit&offset
+HTTP GET /api/v1/reminders?limit=<value>&offset=<value>
 
 # get specific data from query
 HTTP GET /api/v1/reminders/${id}
