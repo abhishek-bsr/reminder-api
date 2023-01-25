@@ -63,6 +63,8 @@ HTTP PUT /api/v1/reminders/${id}
 
 ## Environment Variables
 
+- **[NOTE]** Create file `config.properties` and use the below variables  
+
 | ENV Name   | Description          |
 |------------|----------------------|
 | DB_PORT    | Database port number |
@@ -80,7 +82,7 @@ git clone https://github.com/abhishek-bsr/reminder-api.git
 # get into directory
 cd reminder-api
 # create .env file in /resources
-echo "#env data here" >> /src/main/resources/.env
+echo "#env data here" >> /src/main/resources/config.properties
 
 # build using maven
 mvn clean package

@@ -1,24 +1,31 @@
 package com.reminder;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.time.Instant;
 import java.util.Properties;
 
 public class Dao {
+    final String resourceName = "config.properties"; // could also be a constant
+    final ClassLoader loader = Thread.currentThread().getContextClassLoader();
     final Properties props = new Properties();
     private static Connection startConnection = null;
-    private final static Dotenv env = Dotenv.load();
-    final String DB_PORT = env.get("DB_PORT");
-    final String DB_URL = "jdbc:postgresql://localhost:" + DB_PORT + "/";
 
-    protected Dao() throws SQLException, ClassNotFoundException {
-        final String DB_NAME = env.get("DB_NAME");
-        final String username = env.get("PSQL_USER");
-        final String password = env.get("PSQL_PASS");
+    protected Dao() throws SQLException, ClassNotFoundException, IOException {
+        InputStream resourceStream =
+                loader.getResourceAsStream(resourceName);
+        props.load(resourceStream);
+
+        final String DB_PORT = props.getProperty("DB_PORT");
+        final String DB_URL = "jdbc:postgresql://localhost:" + DB_PORT + "/";
+        final String DB_NAME = props.getProperty("DB_NAME");
+        final String username = props.getProperty("PSQL_USER");
+        final String password = props.getProperty("PSQL_PASS");
+
         props.setProperty("user", username);
         props.setProperty("password", password);
 
@@ -28,7 +35,7 @@ public class Dao {
 
     // add data
     protected int insertData(Models model) throws SQLException {
-        final String tableName = env.get("TABLE_NAME");
+        final String tableName = props.getProperty("TABLE_NAME");
         PreparedStatement stmt = startConnection.prepareStatement(
                 "INSERT INTO " + tableName + " (name, reminder_utc, " +
                         "is_completed, is_important, note) VALUES" +
@@ -50,7 +57,7 @@ public class Dao {
 
     // read data
     protected JSONObject selectData(int id) throws SQLException {
-        final String tableName = env.get("TABLE_NAME");
+        final String tableName = props.getProperty("TABLE_NAME");
         PreparedStatement stmt = startConnection.prepareStatement("SELECT * " +
                 "FROM " + tableName + " WHERE id = ?");
         stmt.setInt(1, id);
@@ -77,7 +84,7 @@ public class Dao {
     }
 
     protected JSONArray selectAllData(Integer limit, Integer offset) throws SQLException {
-        final String tableName = env.get("TABLE_NAME");
+        final String tableName = props.getProperty("TABLE_NAME");
         String query = "SELECT * FROM " + tableName;
         if (limit != null)
             query += " LIMIT " + limit;
@@ -126,7 +133,7 @@ public class Dao {
 
         query = query.substring(0, query.length() - 1);
 
-        final String tableName = env.get("TABLE_NAME");
+        final String tableName = props.getProperty("TABLE_NAME");
         PreparedStatement stmt =
                 startConnection.prepareStatement("UPDATE " + tableName + " " +
                         query + " WHERE id = (?);");
@@ -140,7 +147,7 @@ public class Dao {
 
     // delete data
     protected int deleteData(int id) throws SQLException {
-        final String tableName = env.get("TABLE_NAME");
+        final String tableName = props.getProperty("TABLE_NAME");
         PreparedStatement stmt =
                 startConnection.prepareStatement("DELETE FROM " + tableName +
                         " WHERE id = ?;");
@@ -153,7 +160,7 @@ public class Dao {
     }
 
     protected void deleteAllData() throws SQLException {
-        String tableName = env.get("TABLE_NAME");
+        final String tableName = props.getProperty("TABLE_NAME");
         PreparedStatement stmt =
                 startConnection.prepareStatement("DELETE FROM " + tableName + ";");
 
