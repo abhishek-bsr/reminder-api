@@ -1,5 +1,5 @@
 # env
-src/main/resources/.env
+config.properties
 
 # build
 /target
