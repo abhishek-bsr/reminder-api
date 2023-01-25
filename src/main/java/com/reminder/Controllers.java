@@ -19,8 +19,8 @@ public class Controllers extends HttpServlet {
     private final String CHARACTER_ENCODING = "UTF-8";
     private final String CONTENT_TYPE = "application/json";
     private final int UNPROCESSABLE_ENTITY = 422;
-    private static Services services = new Services();
-    private static Utils utility = new Utils();
+    private final static Services services = new Services();
+    private final static Utils utility = new Utils();
 
     /*
      * method /api/v1/reminders
@@ -43,16 +43,14 @@ public class Controllers extends HttpServlet {
                 Integer limit = utility.getParamValue(request, "limit");
                 Integer offset = utility.getParamValue(request, "offset");
 
-                JSONArray resultArray = new JSONArray();
                 Dao database = new Dao();
-                resultArray = database.selectAllData(limit, offset);
+                JSONArray resultArray = database.selectAllData(limit, offset);
 
                 services.successResponse(output, resultArray);
             } else {
                 int id = Integer.parseInt(pathInfo.replace("/", ""));
-                JSONObject resultObject = new JSONObject();
                 Dao database = new Dao();
-                resultObject = database.selectData(id);
+                JSONObject resultObject = database.selectData(id);
 
                 /// check if data exists
                 if (resultObject.isEmpty()) {
@@ -188,8 +186,7 @@ public class Controllers extends HttpServlet {
         if (pathInfo == null || pathInfo.length() == 1) {
             String errorMessage = "Missing parameter <id>";
             services.setResponseHeader(response, HttpServletResponse.SC_BAD_REQUEST);
-            services.errorResponse(output, HttpServletResponse.SC_BAD_REQUEST,
-                    errorMessage.toString());
+            services.errorResponse(output, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             return;
         }
 

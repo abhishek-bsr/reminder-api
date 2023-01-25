@@ -1,32 +1,37 @@
 package com.reminder;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.PrintWriter;
 import java.sql.*;
 import java.time.Instant;
 import java.util.Properties;
 
 public class Dao {
-    final String DB_URL = "jdbc:postgresql://localhost:5432/postgres";
     final Properties props = new Properties();
     private static Connection startConnection = null;
+    private final static Dotenv env = Dotenv.load();
+    final String DB_PORT = env.get("DB_PORT");
+    final String DB_URL = "jdbc:postgresql://localhost:" + DB_PORT + "/";
 
     protected Dao() throws SQLException, ClassNotFoundException {
-        props.setProperty("user", "abhi-pt6766");
-        props.setProperty("password", "root");
+        final String DB_NAME = env.get("DB_NAME");
+        final String username = env.get("PSQL_USER");
+        final String password = env.get("PSQL_PASS");
+        props.setProperty("user", username);
+        props.setProperty("password", password);
 
         Class.forName("org.postgresql.Driver");
-        startConnection = DriverManager.getConnection(DB_URL, props);
+        startConnection = DriverManager.getConnection(DB_URL + DB_NAME, props);
     }
 
     // add data
     protected int insertData(Models model) throws SQLException {
+        final String tableName = env.get("TABLE_NAME");
         PreparedStatement stmt = startConnection.prepareStatement(
-                "INSERT INTO reminders (name, reminder_utc, is_completed," +
-                        " is_important, note) VALUES" +
+                "INSERT INTO " + tableName + " (name, reminder_utc, " +
+                        "is_completed, is_important, note) VALUES" +
                         "(?, ?, ?, ?, ?);");
         stmt.setString(1, model.getName());
         stmt.setTimestamp(2, Timestamp.from(model.getRemindTime()));
@@ -45,8 +50,9 @@ public class Dao {
 
     // read data
     protected JSONObject selectData(int id) throws SQLException {
+        final String tableName = env.get("TABLE_NAME");
         PreparedStatement stmt = startConnection.prepareStatement("SELECT * " +
-                "FROM reminders WHERE id = ?");
+                "FROM " + tableName + " WHERE id = ?");
         stmt.setInt(1, id);
         ResultSet rs = stmt.executeQuery();
 
@@ -71,11 +77,12 @@ public class Dao {
     }
 
     protected JSONArray selectAllData(Integer limit, Integer offset) throws SQLException {
-        String query = "SELECT * FROM reminders";
+        final String tableName = env.get("TABLE_NAME");
+        String query = "SELECT * FROM " + tableName;
         if (limit != null)
-            query += " LIMIT " + limit.toString();
+            query += " LIMIT " + limit;
         if (offset != null)
-            query += " OFFSET " + offset.toString();
+            query += " OFFSET " + offset;
 
         PreparedStatement stmt = startConnection.prepareStatement(query + ";");
         ResultSet rs = stmt.executeQuery();
@@ -119,9 +126,10 @@ public class Dao {
 
         query = query.substring(0, query.length() - 1);
 
+        final String tableName = env.get("TABLE_NAME");
         PreparedStatement stmt =
-                startConnection.prepareStatement("UPDATE reminders " + query +
-                        " WHERE id = (?);");
+                startConnection.prepareStatement("UPDATE " + tableName + " " +
+                        query + " WHERE id = (?);");
         stmt.setInt(1, id);
 
         int result = stmt.executeUpdate();
@@ -132,9 +140,10 @@ public class Dao {
 
     // delete data
     protected int deleteData(int id) throws SQLException {
+        final String tableName = env.get("TABLE_NAME");
         PreparedStatement stmt =
-                startConnection.prepareStatement("DELETE FROM reminders " +
-                        "WHERE id = ?;");
+                startConnection.prepareStatement("DELETE FROM " + tableName +
+                        " WHERE id = ?;");
         stmt.setInt(1, id);
 
         int result = stmt.executeUpdate();
@@ -144,8 +153,9 @@ public class Dao {
     }
 
     protected void deleteAllData() throws SQLException {
+        String tableName = env.get("TABLE_NAME");
         PreparedStatement stmt =
-                startConnection.prepareStatement("DELETE FROM reminders;");
+                startConnection.prepareStatement("DELETE FROM " + tableName + ";");
 
         stmt.executeUpdate();
         stmt.close();
